@@ -1,19 +1,52 @@
 """
 Project Orion Predictor
-Moteur principal
+Moteur principal de prédiction
 Version 0.1
 """
 
-from analysis.parser import parse_matches
-from analysis.statistics import calculate_team_stats
+from models.poisson import (
+    calculate_score_probabilities,
+    most_likely_scores
+)
 
 
-def analyze(text):
-    """
-    Analyse une liste de matchs
-    """
+def predict(
+    home_team,
+    away_team,
+    stats
+):
 
-    matches = parse_matches(text)
-    stats = calculate_team_stats(matches)
+    home = stats[home_team]
+    away = stats[away_team]
 
-    return stats
+
+    home_attack = (
+        home["goals_for"] /
+        max(home["played"], 1)
+    )
+
+    away_attack = (
+        away["goals_for"] /
+        max(away["played"], 1)
+    )
+
+
+    probabilities = calculate_score_probabilities(
+        home_attack,
+        away_attack
+    )
+
+
+    scores = most_likely_scores(
+        probabilities
+    )
+
+
+    result = {
+        "home_team": home_team,
+        "away_team": away_team,
+        "scores": scores
+    }
+
+
+    return result
