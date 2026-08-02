@@ -1,14 +1,43 @@
 """
 Project Orion Predictor
-FIFA FC 26 5v5 Prediction Engine
-
-Version: 0.1
+Lancement du programme
+Version 0.1
 """
 
-def start():
-    print("Project Orion Predictor démarré")
-    print("Moteur FIFA FC 26 5v5 en construction...")
+from analysis.parser import parse_matches
+from database.database import (
+    save_matches,
+    remove_duplicates
+)
+
+
+def main():
+
+    with open(
+        "data/matches.txt",
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        text = file.read()
+
+
+    matches = parse_matches(text)
+
+    matches = remove_duplicates(matches)
+
+    save_matches(matches)
+
+
+    print(
+        "Project Orion Predictor lancé"
+    )
+
+    print(
+        len(matches),
+        "matchs chargés"
+    )
 
 
 if __name__ == "__main__":
-    start()
+    main()
