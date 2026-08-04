@@ -1,17 +1,17 @@
 """
 Project Orion Predictor
-Parser des matchs FIFA FC 26 5v5
-Version 0.1
+Analyseur de matchs
+Version 0.1.1
 """
-
-import re
 
 
 def parse_matches(text):
     """
-    Transforme une liste de matchs texte en données exploitables.
-    Format attendu :
+    Transforme les matchs au format :
+
     Equipe A 3-2 Equipe B
+
+    en données exploitables.
     """
 
     matches = []
@@ -19,40 +19,54 @@ def parse_matches(text):
     lines = text.strip().split("\n")
 
     for line in lines:
+
         line = line.strip()
 
         if not line:
             continue
 
-        # Recherche du score
-        score = re.search(r"(.+?)\s+(\d+)-(\d+)\s+(.+)", line)
+        try:
+            parts = line.split()
 
-        if score:
-            home_team = score.group(1).strip()
-            home_goals = int(score.group(2))
-            away_goals = int(score.group(3))
-            away_team = score.group(4).strip()
+            score_index = None
 
-            matches.append({
-                "home_team": home_team,
-                "home_goals": home_goals,
-                "away_goals": away_goals,
-                "away_team": away_team
-            })
+            for i, part in enumerate(parts):
+                if "-" in part and part[0].isdigit():
+                    score_index = i
+                    break
+
+            if score_index is None:
+                continue
+
+
+            home_team = " ".join(
+                parts[:score_index]
+            )
+
+            score = parts[score_index]
+
+            away_team = " ".join(
+                parts[score_index + 1:]
+            )
+
+
+            home_goals, away_goals = map(
+                int,
+                score.split("-")
+            )
+
+
+            matches.append(
+                {
+                    "home_team": home_team,
+                    "away_team": away_team,
+                    "home_goals": home_goals,
+                    "away_goals": away_goals
+                }
+            )
+
+        except Exception:
+            continue
+
 
     return matches
-
-
-# Test rapide
-if __name__ == "__main__":
-
-    data = """
-    Galatasaray 5-2 Club Atlético de Madrid
-    Napoli 1-3 Liverpool
-    Real Madrid 5-1 Chelsea
-    """
-
-    result = parse_matches(data)
-
-    for match in result:
-        print(match)
