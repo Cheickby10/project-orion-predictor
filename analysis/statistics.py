@@ -1,49 +1,78 @@
 """
 Project Orion Predictor
-Statistiques des équipes
-Version 0.1
+Calcul des statistiques des équipes
+Version 0.1.1
 """
-
-from collections import defaultdict
 
 
 def calculate_team_stats(matches):
-    teams = defaultdict(lambda: {
-        "played": 0,
-        "wins": 0,
-        "draws": 0,
-        "losses": 0,
-        "goals_for": 0,
-        "goals_against": 0
-    })
+    """
+    Calcule les statistiques de chaque équipe.
+    """
+
+    stats = {}
+
 
     for match in matches:
 
         home = match["home_team"]
         away = match["away_team"]
 
-        hg = match["home_goals"]
-        ag = match["away_goals"]
+        home_goals = match["home_goals"]
+        away_goals = match["away_goals"]
 
-        teams[home]["played"] += 1
-        teams[away]["played"] += 1
 
-        teams[home]["goals_for"] += hg
-        teams[home]["goals_against"] += ag
+        if home not in stats:
+            stats[home] = create_team_profile()
 
-        teams[away]["goals_for"] += ag
-        teams[away]["goals_against"] += hg
 
-        if hg > ag:
-            teams[home]["wins"] += 1
-            teams[away]["losses"] += 1
+        if away not in stats:
+            stats[away] = create_team_profile()
 
-        elif hg < ag:
-            teams[away]["wins"] += 1
-            teams[home]["losses"] += 1
+
+        # Matchs joués
+        stats[home]["played"] += 1
+        stats[away]["played"] += 1
+
+
+        # Buts marqués
+        stats[home]["goals_for"] += home_goals
+        stats[away]["goals_for"] += away_goals
+
+
+        # Buts encaissés
+        stats[home]["goals_against"] += away_goals
+        stats[away]["goals_against"] += home_goals
+
+
+        # Résultats
+        if home_goals > away_goals:
+
+            stats[home]["wins"] += 1
+            stats[away]["losses"] += 1
+
+        elif home_goals < away_goals:
+
+            stats[away]["wins"] += 1
+            stats[home]["losses"] += 1
 
         else:
-            teams[home]["draws"] += 1
-            teams[away]["draws"] += 1
 
-    return teams
+            stats[home]["draws"] += 1
+            stats[away]["draws"] += 1
+
+
+    return stats
+
+
+
+def create_team_profile():
+
+    return {
+        "played": 0,
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "goals_for": 0,
+        "goals_against": 0
+    }
