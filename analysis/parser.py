@@ -1,17 +1,19 @@
 """
 Project Orion Predictor
-Analyseur de matchs
-Version 0.1.1
+Parser amélioré des matchs
+Version 0.2
 """
 
 
 def parse_matches(text):
     """
-    Transforme les matchs au format :
+    Transforme un texte de matchs en données exploitables.
 
-    Equipe A 3-2 Equipe B
+    Format accepté :
 
-    en données exploitables.
+    Real Madrid 5-1 Chelsea
+    Liverpool 3-2 Juventus
+
     """
 
     matches = []
@@ -26,29 +28,37 @@ def parse_matches(text):
             continue
 
         try:
+
             parts = line.split()
 
-            score_index = None
+            score_position = None
 
-            for i, part in enumerate(parts):
-                if "-" in part and part[0].isdigit():
-                    score_index = i
-                    break
+            for index, part in enumerate(parts):
 
-            if score_index is None:
+                if "-" in part:
+
+                    left, right = part.split("-")
+
+                    if left.isdigit() and right.isdigit():
+
+                        score_position = index
+                        break
+
+
+            if score_position is None:
                 continue
 
 
             home_team = " ".join(
-                parts[:score_index]
+                parts[:score_position]
             )
-
-            score = parts[score_index]
 
             away_team = " ".join(
-                parts[score_index + 1:]
+                parts[score_position + 1:]
             )
 
+
+            score = parts[score_position]
 
             home_goals, away_goals = map(
                 int,
@@ -58,14 +68,16 @@ def parse_matches(text):
 
             matches.append(
                 {
-                    "home_team": home_team,
-                    "away_team": away_team,
+                    "home_team": home_team.strip(),
+                    "away_team": away_team.strip(),
                     "home_goals": home_goals,
                     "away_goals": away_goals
                 }
             )
 
+
         except Exception:
+
             continue
 
 
