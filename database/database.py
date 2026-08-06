@@ -1,84 +1,182 @@
 """
 Project Orion Predictor
-Gestion des données
-Version 0.1.1
+Gestion avancée de la base de données
+Version 0.2
 """
 
 import json
 import os
+from datetime import datetime
 
 
 DATA_FOLDER = "data"
-MATCHES_FILE = os.path.join(DATA_FOLDER, "matches.json")
+
+MATCHES_FILE = os.path.join(
+    DATA_FOLDER,
+    "matches.json"
+)
 
 
-def save_matches(matches):
-    """
-    Sauvegarde les matchs dans un fichier JSON.
-    """
+HISTORY_FILE = os.path.join(
+    DATA_FOLDER,
+    "imports_history.json"
+)
 
-    os.makedirs(DATA_FOLDER, exist_ok=True)
 
-    with open(MATCHES_FILE, "w", encoding="utf-8") as file:
-        json.dump(matches, file, indent=4, ensure_ascii=False)
+
+def ensure_folder():
+
+    os.makedirs(
+        DATA_FOLDER,
+        exist_ok=True
+    )
+
 
 
 def load_matches():
-    """
-    Charge les matchs sauvegardés.
-    """
+
+    ensure_folder()
 
     if not os.path.exists(MATCHES_FILE):
         return []
 
-    with open(MATCHES_FILE, "r", encoding="utf-8") as file:
+    with open(
+        MATCHES_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
         return json.load(file)
 
 
+
+def save_matches(matches):
+
+    ensure_folder()
+
+    with open(
+        MATCHES_FILE,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        json.dump(
+            matches,
+            file,
+            indent=4,
+            ensure_ascii=False
+        )
+
+
+
 def remove_duplicates(matches):
-    """
-    Supprime les doublons.
-    """
 
     unique = []
 
     for match in matches:
+
         if match not in unique:
             unique.append(match)
 
     return unique
 
 
-def get_team_matches(matches, team):
-    """
-    Retourne tous les matchs d'une équipe.
-    """
 
-    result = []
+def add_matches(new_matches):
 
-    for match in matches:
+    old_matches = load_matches()
 
-        if (
-            match["home_team"] == team
-            or match["away_team"] == team
-        ):
-            result.append(match)
-
-    return result
+    all_matches = (
+        old_matches
+        +
+        new_matches
+    )
 
 
-def save_text_matches(text):
-    """
-    Lit un texte de matchs, enlève les doublons
-    puis sauvegarde le résultat.
-    """
+    all_matches = remove_duplicates(
+        all_matches
+    )
 
-    from analysis.parser import parse_matches
 
-    matches = parse_matches(text)
+    save_matches(
+        all_matches
+    )
 
-    matches = remove_duplicates(matches)
 
-    save_matches(matches)
+    save_import_history(
+        len(new_matches)
+    )
 
-    return len(matches)
+
+    return len(all_matches)
+
+
+
+def delete_all_matches():
+
+    save_matches([])
+
+
+
+def delete_last_matches(number):
+
+    matches = load_matches()
+
+
+    if number >= len(matches):
+
+        save_matches([])
+
+    else:
+
+        matches = matches[number:]
+
+        save_matches(matches)
+
+
+
+def save_import_history(quantity):
+
+    ensure_folder()
+
+
+    history = []
+
+
+    if os.path.exists(HISTORY_FILE):
+
+        with open(
+            HISTORY_FILE,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            history = json.load(file)
+
+
+
+    history.append(
+        {
+            "date":
+            datetime.now().strftime(
+                "%d/%m/%Y %H:%M"
+            ),
+
+            "matches_added":
+            quantity
+        }
+    )
+
+
+    with open(
+        HISTORY_FILE,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        json.dump(
+            history,
+            file,
+            indent=4,
+            ensure_ascii=False
+    )
