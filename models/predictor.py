@@ -1,7 +1,7 @@
 """
 Project Orion Predictor
-Moteur principal de prédiction
-Version 0.1
+Moteur de prédiction
+Version 0.1.1
 """
 
 from models.poisson import (
@@ -9,44 +9,55 @@ from models.poisson import (
     most_likely_scores
 )
 
-
-def predict(
-    home_team,
-    away_team,
-    stats
-):
-
-    home = stats[home_team]
-    away = stats[away_team]
+from models.elo import EloSystem
 
 
-    home_attack = (
-        home["goals_for"] /
-        max(home["played"], 1)
-    )
+class Predictor:
 
-    away_attack = (
-        away["goals_for"] /
-        max(away["played"], 1)
-    )
+    def __init__(self, matches, stats):
 
+        self.matches = matches
+        self.stats = stats
 
-    probabilities = calculate_score_probabilities(
-        home_attack,
-        away_attack
-    )
+        self.elo = EloSystem()
+        self.elo.process_matches(matches)
 
+    def predict(self, home_team, away_team):
 
-    scores = most_likely_scores(
-        probabilities
-    )
+        if home_team not in self.stats:
+            return None
 
+        if away_team not in self.stats:
+            return None
 
-    result = {
-        "home_team": home_team,
-        "away_team": away_team,
-        "scores": scores
-    }
+        home = self.stats[home_team]
+        away = self.stats[away_team]
 
+        home_attack = (
+            home["goals_for"] /
+            max(home["played"], 1)
+        )
 
-    return result
+        away_attack = (
+            away["goals_for"] /
+            max(away["played"], 1)
+        )
+
+        probabilities = calculate_score_probabilities(
+            home_attack,
+            away_attack,
+            max_goals=10
+        )
+
+        scores = most_likely_scores(
+            probabilities,
+            top=5
+        )
+
+        return {
+            "home_team": home_team,
+            "away_team": away_team,
+            "home_rating": self.elo.get_rating(home_team),
+            "away_rating": self.elo.get_rating(away_team),
+            "scores": scores
+        }
