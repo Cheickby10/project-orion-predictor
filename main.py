@@ -1,10 +1,5 @@
-"""
-Project Orion Predictor
-Lancement du programme
-Version 0.1
-"""
-
 from analysis.parser import parse_matches
+
 from database.database import (
     save_matches,
     remove_duplicates
@@ -21,22 +16,13 @@ def main():
 
         text = file.read()
 
-
     matches = parse_matches(text)
 
     matches = remove_duplicates(matches)
 
     save_matches(matches)
 
-
-    print(
-        "Project Orion Predictor lancé"
-    )
-
-    print(
-        len(matches),
-        "matchs chargés"
-    )
+    print(f"{len(matches)} matchs enregistrés.")
 
 
 if __name__ == "__main__":
