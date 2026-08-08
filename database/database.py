@@ -129,7 +129,7 @@ def delete_last_matches(number):
 
     else:
 
-        matches = matches[number:]
+        matches = matches[:-number]
 
         save_matches(matches)
 
