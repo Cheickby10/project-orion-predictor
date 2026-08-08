@@ -1,3 +1,24 @@
+"""
+Project Orion Predictor
+Point d'entrée principal
+Version 0.2
+"""
+
+import subprocess
+import sys
+
+
+if __name__ == "__main__":
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "streamlit",
+            "run",
+            "app/app.py"
+        ]
+    )
 from analysis.parser import parse_matches
 
 from database.database import (
