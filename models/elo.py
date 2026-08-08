@@ -1,7 +1,7 @@
 """
 Project Orion Predictor
-Classement Elo
-Version 0.1.1
+Système Elo amélioré
+Version 0.2
 """
 
 INITIAL_RATING = 1500
@@ -14,64 +14,71 @@ class EloSystem:
         self.ratings = {}
 
     def get_rating(self, team):
-
         if team not in self.ratings:
             self.ratings[team] = INITIAL_RATING
 
         return self.ratings[team]
 
     def expected_score(self, rating_a, rating_b):
-
         return 1 / (
             1 + 10 ** ((rating_b - rating_a) / 400)
         )
 
-    def update(self, home, away, home_goals, away_goals):
+    def update(
+        self,
+        home,
+        away,
+        home_goals,
+        away_goals
+    ):
 
-        rating_home = self.get_rating(home)
-        rating_away = self.get_rating(away)
+        home_rating = self.get_rating(home)
+        away_rating = self.get_rating(away)
 
         expected_home = self.expected_score(
-            rating_home,
-            rating_away
+            home_rating,
+            away_rating
         )
 
         expected_away = self.expected_score(
-            rating_away,
-            rating_home
+            away_rating,
+            home_rating
         )
 
         if home_goals > away_goals:
-            score_home = 1
-            score_away = 0
+            actual_home = 1
+            actual_away = 0
 
         elif home_goals < away_goals:
-            score_home = 0
-            score_away = 1
+            actual_home = 0
+            actual_away = 1
 
         else:
-            score_home = 0.5
-            score_away = 0.5
-
-        rating_home += K_FACTOR * (
-            score_home - expected_home
-        )
-
-        rating_away += K_FACTOR * (
-            score_away - expected_away
-        )
+            actual_home = 0.5
+            actual_away = 0.5
 
         self.ratings[home] = round(
-            rating_home,
+            home_rating
+            + K_FACTOR
+            * (actual_home - expected_home),
             2
         )
 
         self.ratings[away] = round(
-            rating_away,
+            away_rating
+            + K_FACTOR
+            * (actual_away - expected_away),
             2
         )
 
     def process_matches(self, matches):
+        """
+        Les matchs sont fournis du plus récent
+        au plus ancien.
+
+        On les traite donc dans l'ordre inverse
+        pour reconstruire l'évolution Elo.
+        """
 
         for match in reversed(matches):
 
