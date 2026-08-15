@@ -392,7 +392,7 @@ elif page == "🎯 Nouvelle prédiction":
             home_team,
             away_team,
             form_games=form_games,
-            over_under_line=line
+            over_under_lines=[3.5,4.5,5.5,6.5,7.5,8.5,9.5]
         )
 
 
