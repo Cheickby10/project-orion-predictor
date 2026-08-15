@@ -1,14 +1,16 @@
 """
 Project Orion Predictor
 Interface Streamlit
-Version 0.2
+Version 0.3
 """
 
 import os
 import sys
 
-# Permet à Streamlit Cloud de trouver les modules
-# situés à la racine du projet.
+# ============================================================
+# CHEMIN RACINE DU PROJET
+# ============================================================
+
 ROOT_DIR = os.path.abspath(
     os.path.join(
         os.path.dirname(__file__),
@@ -22,6 +24,7 @@ if ROOT_DIR not in sys.path:
 
 import streamlit as st
 
+
 from database.database import (
     load_matches,
     add_matches,
@@ -29,21 +32,26 @@ from database.database import (
     delete_last_matches
 )
 
+
 from database.history import (
     load_history,
     get_import_count,
     get_total_imported_matches
 )
 
+
 from analysis.parser import parse_matches
+
 
 from analysis.statistics import (
     calculate_team_stats
 )
 
+
 from analysis.form import (
     get_team_form
 )
+
 
 from models.predictor import (
     Predictor
@@ -99,16 +107,22 @@ st.markdown(
 
 matches = load_matches()
 
-stats = calculate_team_stats(matches)
+stats = calculate_team_stats(
+    matches
+)
 
-teams = sorted(stats.keys())
+teams = sorted(
+    stats.keys()
+)
 
 
 # ============================================================
 # SIDEBAR
 # ============================================================
 
-st.sidebar.title("⚽ Project Orion")
+st.sidebar.title(
+    "⚽ Project Orion"
+)
 
 st.sidebar.caption(
     "FIFA FC 26 • 5v5"
@@ -199,13 +213,11 @@ if page == "🏠 Tableau de bord":
             f"{len(matches)} matchs disponibles."
         )
 
-
         st.write(
             f"Nombre total de matchs importés "
             f"depuis la création de la base : "
             f"{get_total_imported_matches()}"
         )
-
 
         st.subheader(
             "Équipes détectées"
@@ -272,23 +284,18 @@ elif page == "📥 Importer des matchs":
 
                 before = len(matches)
 
-
                 total = add_matches(
                     parsed_matches
                 )
 
-
                 after = total
 
-
                 added = after - before
-
 
                 st.success(
                     f"Import terminé. "
                     f"Base actuelle : {after} matchs."
                 )
-
 
                 st.write(
                     f"Matchs détectés : "
@@ -304,7 +311,6 @@ elif page == "📥 Importer des matchs":
                     f"Doublons ignorés : "
                     f"{max(len(parsed_matches) - added, 0)}"
                 )
-
 
                 st.rerun()
 
@@ -330,6 +336,10 @@ elif page == "🎯 Nouvelle prédiction":
         st.stop()
 
 
+    # ========================================================
+    # ÉQUIPES
+    # ========================================================
+
     col1, col2 = st.columns(2)
 
 
@@ -349,12 +359,15 @@ elif page == "🎯 Nouvelle prédiction":
             if team != home_team
         ]
 
-
         away_team = st.selectbox(
             "Équipe B",
             away_options
         )
 
+
+    # ========================================================
+    # PARAMÈTRES
+    # ========================================================
 
     col1, col2 = st.columns(2)
 
@@ -364,18 +377,24 @@ elif page == "🎯 Nouvelle prédiction":
         form_games = st.selectbox(
             "Forme récente",
             [5, 8, 10],
-            index=0
+            index=2
         )
 
 
     with col2:
 
-        line = st.selectbox(
-            "Ligne Over/Under",
-            [3.5, 4.5, 5.5, 6.5, 7.5],
-            index=2
+        st.selectbox(
+            "Analyse Over/Under",
+            [
+                "Toutes les lignes"
+            ],
+            index=0
         )
 
+
+    # ========================================================
+    # ANALYSE
+    # ========================================================
 
     if st.button(
         "🔎 Analyser le match",
@@ -392,7 +411,15 @@ elif page == "🎯 Nouvelle prédiction":
             home_team,
             away_team,
             form_games=form_games,
-            over_under_lines=[3.5,4.5,5.5,6.5,7.5,8.5,9.5]
+            over_under_lines=[
+                3.5,
+                4.5,
+                5.5,
+                6.5,
+                7.5,
+                8.5,
+                9.5
+            ]
         )
 
 
@@ -412,12 +439,12 @@ elif page == "🎯 Nouvelle prédiction":
             )
 
 
-            # ------------------------------------------------
+            # =================================================
             # 1N2
-            # ------------------------------------------------
+            # =================================================
 
             st.markdown(
-                "### Probabilités 1N2"
+                "### 🎯 Probabilités 1N2"
             )
 
 
@@ -453,16 +480,16 @@ elif page == "🎯 Nouvelle prédiction":
                 )
 
 
-            # ------------------------------------------------
+            # =================================================
             # ELO
-            # ------------------------------------------------
+            # =================================================
 
             st.markdown(
-                "### Classement Elo"
+                "### 📊 Classement Elo"
             )
 
 
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
 
 
             with col1:
@@ -481,12 +508,20 @@ elif page == "🎯 Nouvelle prédiction":
                 )
 
 
-            # ------------------------------------------------
+            with col3:
+
+                st.metric(
+                    "Avantage Elo A",
+                    f"{result['elo_home_advantage']:.1f}%"
+                )
+
+
+            # =================================================
             # BUTS ATTENDUS
-            # ------------------------------------------------
+            # =================================================
 
             st.markdown(
-                "### Buts attendus"
+                "### ⚽ Buts attendus"
             )
 
 
@@ -495,7 +530,7 @@ elif page == "🎯 Nouvelle prédiction":
             ]
 
 
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
 
 
             with col1:
@@ -514,9 +549,17 @@ elif page == "🎯 Nouvelle prédiction":
                 )
 
 
-            # ------------------------------------------------
+            with col3:
+
+                st.metric(
+                    "Total attendu",
+                    expected["total"]
+                )
+
+
+            # =================================================
             # SCORES
-            # ------------------------------------------------
+            # =================================================
 
             st.markdown(
                 "### 🎯 Scores les plus probables"
@@ -531,9 +574,9 @@ elif page == "🎯 Nouvelle prédiction":
                 )
 
 
-            # ------------------------------------------------
+            # =================================================
             # BTTS
-            # ------------------------------------------------
+            # =================================================
 
             st.markdown(
                 "### ⚽ BTTS"
@@ -543,31 +586,47 @@ elif page == "🎯 Nouvelle prédiction":
             btts = result["btts"]
 
 
-            col1, col2 = st.columns(2)
+            col1, col2, col3, col4 = st.columns(4)
 
 
             with col1:
 
                 st.metric(
-                    "Oui",
-                    f"{btts['yes'] * 100:.1f}%"
+                    "BTTS 1+",
+                    f"{btts['1']['yes'] * 100:.1f}%"
                 )
 
 
             with col2:
 
                 st.metric(
-                    "Non",
-                    f"{btts['no'] * 100:.1f}%"
-            )
+                    "BTTS 2+",
+                    f"{btts['2']['yes'] * 100:.1f}%"
+                )
 
 
-            # ------------------------------------------------
+            with col3:
+
+                st.metric(
+                    "BTTS 3+",
+                    f"{btts['3']['yes'] * 100:.1f}%"
+                )
+
+
+            with col4:
+
+                st.metric(
+                    "BTTS 4+",
+                    f"{btts['4']['yes'] * 100:.1f}%"
+                )
+
+
+            # =================================================
             # OVER / UNDER
-            # ------------------------------------------------
+            # =================================================
 
             st.markdown(
-                f"### 📊 Over / Under {line}"
+                "### 📊 Over / Under"
             )
 
 
@@ -576,28 +635,50 @@ elif page == "🎯 Nouvelle prédiction":
             ]
 
 
-            col1, col2 = st.columns(2)
+            for current_line in [
+                3.5,
+                4.5,
+                5.5,
+                6.5,
+                7.5,
+                8.5,
+                9.5
+            ]:
+
+                line_data = over_under[
+                    str(current_line)
+                ]
 
 
-            with col1:
-
-                st.metric(
-                    f"Over {line}",
-                    f"{over_under['over'] * 100:.1f}%"
-                )
+                col1, col2, col3 = st.columns(3)
 
 
-            with col2:
+                with col1:
 
-                st.metric(
-                    f"Under {line}",
-                    f"{over_under['under'] * 100:.1f}%"
-                )
+                    st.write(
+                        f"**Ligne {current_line}**"
+                    )
 
 
-            # ------------------------------------------------
+                with col2:
+
+                    st.metric(
+                        f"Over {current_line}",
+                        f"{line_data['over'] * 100:.1f}%"
+                    )
+
+
+                with col3:
+
+                    st.metric(
+                        f"Under {current_line}",
+                        f"{line_data['under'] * 100:.1f}%"
+                    )
+
+
+            # =================================================
             # FORME
-            # ------------------------------------------------
+            # =================================================
 
             st.markdown(
                 f"### 📈 Forme — "
@@ -659,6 +740,57 @@ elif page == "🎯 Nouvelle prédiction":
                     f"Buts encaissés/match : "
                     f"{away_form['average_goals_against']:.2f}"
                 )
+
+
+            # =================================================
+            # H2H
+            # =================================================
+
+            st.markdown(
+                "### 🤝 H2H"
+            )
+
+
+            h2h = result["h2h"]
+
+
+            if h2h["matches"] == 0:
+
+                st.info(
+                    "Aucun H2H disponible."
+                )
+
+            else:
+
+                st.write(
+                    f"Matchs H2H analysés : "
+                    f"**{h2h['matches']}**"
+                )
+
+                st.write(
+                    f"Buts pondérés {home_team} : "
+                    f"**{h2h['weighted_team_a_goals']:.2f}**"
+                )
+
+                st.write(
+                    f"Buts pondérés {away_team} : "
+                    f"**{h2h['weighted_team_b_goals']:.2f}**"
+                )
+
+
+            # =================================================
+            # CONFIANCE
+            # =================================================
+
+            st.markdown(
+                "### 🧠 Indice de confiance"
+            )
+
+
+            st.metric(
+                "Confiance du modèle",
+                f"{result['confidence']:.1f}%"
+            )
 
 
 # ============================================================
@@ -839,9 +971,9 @@ elif page == "📚 Base de données":
     st.divider()
 
 
-    # --------------------------------------------------------
-    # AFFICHER LES MATCHS
-    # --------------------------------------------------------
+    # ========================================================
+    # MATCHS
+    # ========================================================
 
     if matches:
 
@@ -852,6 +984,7 @@ elif page == "📚 Base de données":
 
         display_matches = []
 
+
         for index, match in enumerate(
             matches
         ):
@@ -859,11 +992,14 @@ elif page == "📚 Base de données":
             display_matches.append(
                 {
                     "N°": index + 1,
+
                     "Équipe A":
                         match["home_team"],
+
                     "Score":
                         f"{match['home_goals']}-"
                         f"{match['away_goals']}",
+
                     "Équipe B":
                         match["away_team"]
                 }
@@ -876,6 +1012,7 @@ elif page == "📚 Base de données":
             hide_index=True
         )
 
+
     else:
 
         st.info(
@@ -886,9 +1023,9 @@ elif page == "📚 Base de données":
     st.divider()
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # SUPPRESSION
-    # --------------------------------------------------------
+    # ========================================================
 
     st.subheader(
         "🗑️ Gestion des données"
@@ -900,7 +1037,10 @@ elif page == "📚 Base de données":
         "depuis le début de la liste",
         min_value=1,
         max_value=max(len(matches), 1),
-        value=min(10, max(len(matches), 1)),
+        value=min(
+            10,
+            max(len(matches), 1)
+        ),
         step=1
     )
 
@@ -930,6 +1070,10 @@ elif page == "📚 Base de données":
 
     st.divider()
 
+
+    # ========================================================
+    # SUPPRESSION TOTALE
+    # ========================================================
 
     st.subheader(
         "⚠️ Zone dangereuse"
@@ -963,11 +1107,12 @@ elif page == "📚 Base de données":
             st.rerun()
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # HISTORIQUE
-    # --------------------------------------------------------
+    # ========================================================
 
     st.divider()
+
 
     st.subheader(
         "📜 Historique des imports"
