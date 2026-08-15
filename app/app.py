@@ -559,7 +559,7 @@ elif page == "🎯 Nouvelle prédiction":
                 st.metric(
                     "Non",
                     f"{btts['no'] * 100:.1f}%"
-                )
+            )
 
 
             # ------------------------------------------------
