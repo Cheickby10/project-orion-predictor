@@ -1,7 +1,7 @@
 """
 Project Orion Predictor
 Interface Streamlit
-Version 0.3
+Version 0.3.5
 """
 
 import os
@@ -32,26 +32,21 @@ from database.database import (
     delete_last_matches
 )
 
-
 from database.history import (
     load_history,
     get_import_count,
     get_total_imported_matches
 )
 
-
 from analysis.parser import parse_matches
-
 
 from analysis.statistics import (
     calculate_team_stats
 )
 
-
 from analysis.form import (
     get_team_form
 )
-
 
 from models.predictor import (
     Predictor
@@ -63,9 +58,10 @@ from models.predictor import (
 # ============================================================
 
 st.set_page_config(
-    page_title="Project Orion Predictor",
+    page_title="Project Orion",
     page_icon="⚽",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 
@@ -77,22 +73,216 @@ st.markdown(
     """
     <style>
 
-    .main-title {
-        font-size: 36px;
-        font-weight: 700;
-        margin-bottom: 0;
+    /* =======================================================
+       GLOBAL
+       ======================================================= */
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+        max-width: 1400px;
     }
 
-    .subtitle {
-        color: #888888;
+    /* =======================================================
+       TITRES
+       ======================================================= */
+
+    .orion-title {
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin-bottom: 2px;
+    }
+
+    .orion-subtitle {
         font-size: 16px;
+        color: #8b949e;
         margin-bottom: 25px;
     }
 
-    .metric-card {
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #333333;
+    .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-top: 15px;
+        margin-bottom: 12px;
+    }
+
+    /* =======================================================
+       HERO
+       ======================================================= */
+
+    .hero {
+        padding: 28px;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background:
+            linear-gradient(
+                135deg,
+                rgba(40,40,40,0.95),
+                rgba(20,20,20,0.95)
+            );
+        margin-bottom: 25px;
+    }
+
+    .hero-title {
+        font-size: 34px;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .hero-subtitle {
+        color: #9ca3af;
+        font-size: 15px;
+    }
+
+    /* =======================================================
+       MATCH HEADER
+       ======================================================= */
+
+    .match-card {
+        padding: 25px;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.09);
+        background: rgba(255,255,255,0.025);
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .team-name {
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .vs-text {
+        font-size: 15px;
+        color: #888888;
+        margin: 8px 0;
+    }
+
+    /* =======================================================
+       RESULTAT
+       ======================================================= */
+
+    .result-card {
+        padding: 20px;
+        border-radius: 15px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.025);
+        margin-bottom: 15px;
+    }
+
+    .result-title {
+        font-size: 14px;
+        color: #8b949e;
+        margin-bottom: 6px;
+    }
+
+    .result-value {
+        font-size: 30px;
+        font-weight: 800;
+    }
+
+    /* =======================================================
+       SCORE CARD
+       ======================================================= */
+
+    .score-card {
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.025);
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .score {
+        font-size: 23px;
+        font-weight: 800;
+    }
+
+    .score-prob {
+        color: #9ca3af;
+        font-size: 14px;
+    }
+
+    /* =======================================================
+       INFO CARD
+       ======================================================= */
+
+    .info-card {
+        padding: 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.02);
+        margin-bottom: 15px;
+    }
+
+    .info-label {
+        color: #8b949e;
+        font-size: 13px;
+    }
+
+    .info-value {
+        font-size: 21px;
+        font-weight: 700;
+    }
+
+    /* =======================================================
+       BADGES
+       ======================================================= */
+
+    .badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-right: 5px;
+    }
+
+    /* =======================================================
+       SIDEBAR
+       ======================================================= */
+
+    section[data-testid="stSidebar"] {
+        border-right: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .sidebar-brand {
+        font-size: 25px;
+        font-weight: 800;
+        margin-bottom: 0;
+    }
+
+    .sidebar-version {
+        color: #8b949e;
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    /* =======================================================
+       MOBILE
+       ======================================================= */
+
+    @media (max-width: 768px) {
+
+        .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .orion-title {
+            font-size: 30px;
+        }
+
+        .hero-title {
+            font-size: 27px;
+        }
+
+        .team-name {
+            font-size: 18px;
+        }
+
     }
 
     </style>
@@ -120,12 +310,16 @@ teams = sorted(
 # SIDEBAR
 # ============================================================
 
-st.sidebar.title(
-    "⚽ Project Orion"
+st.sidebar.markdown(
+    '<div class="sidebar-brand">⚽ Project Orion</div>',
+    unsafe_allow_html=True
 )
 
-st.sidebar.caption(
-    "FIFA FC 26 • 5v5"
+st.sidebar.markdown(
+    '<div class="sidebar-version">'
+    'FIFA FC 26 • 5v5 • v0.3.5'
+    '</div>',
+    unsafe_allow_html=True
 )
 
 page = st.sidebar.radio(
@@ -147,27 +341,31 @@ page = st.sidebar.radio(
 if page == "🏠 Tableau de bord":
 
     st.markdown(
-        '<div class="main-title">'
-        '⚽ Project Orion Predictor'
-        '</div>',
+        """
+        <div class="hero">
+            <div class="hero-title">
+                ⚽ Project Orion Predictor
+            </div>
+            <div class="hero-subtitle">
+                Moteur d'analyse FIFA FC 26 • 5v5
+            </div>
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
-    st.markdown(
-        '<div class="subtitle">'
-        'FIFA FC 26 • 5v5'
-        '</div>',
-        unsafe_allow_html=True
-    )
 
+    # ========================================================
+    # CARTES PRINCIPALES
+    # ========================================================
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
 
     with col1:
 
         st.metric(
-            "Matchs",
+            "⚽ Matchs",
             len(matches)
         )
 
@@ -175,7 +373,7 @@ if page == "🏠 Tableau de bord":
     with col2:
 
         st.metric(
-            "Équipes",
+            "👥 Équipes",
             len(teams)
         )
 
@@ -183,16 +381,31 @@ if page == "🏠 Tableau de bord":
     with col3:
 
         st.metric(
-            "Importations",
+            "📥 Importations",
             get_import_count()
+        )
+
+
+    with col4:
+
+        st.metric(
+            "📚 Total importé",
+            get_total_imported_matches()
         )
 
 
     st.divider()
 
 
-    st.subheader(
-        "État de la base"
+    # ========================================================
+    # ÉTAT
+    # ========================================================
+
+    st.markdown(
+        '<div class="section-title">'
+        '📡 État du système'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -203,25 +416,62 @@ if page == "🏠 Tableau de bord":
         )
 
         st.info(
-            "Va dans « Importer des matchs » "
-            "pour ajouter tes premiers matchs."
+            "Commence par importer des matchs "
+            "dans la section « Importer des matchs »."
         )
 
     else:
 
         st.success(
+            f"🟢 Système opérationnel — "
             f"{len(matches)} matchs disponibles."
         )
 
-        st.write(
-            f"Nombre total de matchs importés "
-            f"depuis la création de la base : "
-            f"{get_total_imported_matches()}"
+
+        # ====================================================
+        # INFORMATIONS BASE
+        # ====================================================
+
+        col1, col2 = st.columns(2)
+
+
+        with col1:
+
+            st.markdown(
+                '<div class="info-card">'
+                '<div class="info-label">'
+                'Matchs disponibles'
+                '</div>'
+                f'<div class="info-value">'
+                f'{len(matches)}'
+                '</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+
+        with col2:
+
+            st.markdown(
+                '<div class="info-card">'
+                '<div class="info-label">'
+                'Équipes détectées'
+                '</div>'
+                f'<div class="info-value">'
+                f'{len(teams)}'
+                '</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+
+        st.markdown(
+            '<div class="section-title">'
+            '👥 Équipes disponibles'
+            '</div>',
+            unsafe_allow_html=True
         )
 
-        st.subheader(
-            "Équipes détectées"
-        )
 
         st.write(
             ", ".join(teams)
@@ -234,19 +484,29 @@ if page == "🏠 Tableau de bord":
 
 elif page == "📥 Importer des matchs":
 
-    st.title(
-        "📥 Importer des matchs"
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="hero-title">
+                📥 Importer des matchs
+            </div>
+            <div class="hero-subtitle">
+                Alimente la base de données de Project Orion
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.write(
-        "Colle plusieurs matchs ci-dessous. "
-        "Ils doivent être classés du plus récent "
+
+    st.info(
+        "Les matchs doivent être classés du plus récent "
         "au plus ancien."
     )
 
 
     text = st.text_area(
-        "Matchs",
+        "Colle tes matchs ici",
         height=300,
         placeholder=(
             "Galatasaray 5-2 Club Atlético de Madrid\n"
@@ -256,9 +516,15 @@ elif page == "📥 Importer des matchs":
     )
 
 
+    st.caption(
+        "💡 Tu peux importer plusieurs matchs en une seule fois."
+    )
+
+
     if st.button(
         "📥 Importer les matchs",
-        type="primary"
+        type="primary",
+        use_container_width=True
     ):
 
         if not text.strip():
@@ -293,24 +559,40 @@ elif page == "📥 Importer des matchs":
                 added = after - before
 
                 st.success(
-                    f"Import terminé. "
-                    f"Base actuelle : {after} matchs."
+                    f"Import terminé — base actuelle : "
+                    f"{after} matchs."
                 )
 
-                st.write(
-                    f"Matchs détectés : "
-                    f"{len(parsed_matches)}"
-                )
 
-                st.write(
-                    f"Nouveaux matchs réellement ajoutés : "
-                    f"{max(added, 0)}"
-                )
+                col1, col2, col3 = st.columns(3)
 
-                st.write(
-                    f"Doublons ignorés : "
-                    f"{max(len(parsed_matches) - added, 0)}"
-                )
+
+                with col1:
+
+                    st.metric(
+                        "Matchs détectés",
+                        len(parsed_matches)
+                    )
+
+
+                with col2:
+
+                    st.metric(
+                        "Nouveaux matchs",
+                        max(added, 0)
+                    )
+
+
+                with col3:
+
+                    st.metric(
+                        "Doublons",
+                        max(
+                            len(parsed_matches) - added,
+                            0
+                        )
+                    )
+
 
                 st.rerun()
 
@@ -321,8 +603,18 @@ elif page == "📥 Importer des matchs":
 
 elif page == "🎯 Nouvelle prédiction":
 
-    st.title(
-        "🎯 Nouvelle prédiction"
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="hero-title">
+                🎯 Nouvelle analyse
+            </div>
+            <div class="hero-subtitle">
+                Analyse statistique complète du match
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
@@ -330,14 +622,14 @@ elif page == "🎯 Nouvelle prédiction":
 
         st.warning(
             "Il faut au moins deux équipes "
-            "dans la base."
+            "dans la base pour lancer une analyse."
         )
 
         st.stop()
 
 
     # ========================================================
-    # ÉQUIPES
+    # SÉLECTION DES ÉQUIPES
     # ========================================================
 
     col1, col2 = st.columns(2)
@@ -346,7 +638,7 @@ elif page == "🎯 Nouvelle prédiction":
     with col1:
 
         home_team = st.selectbox(
-            "Équipe A",
+            "🏠 Équipe A",
             teams
         )
 
@@ -359,8 +651,9 @@ elif page == "🎯 Nouvelle prédiction":
             if team != home_team
         ]
 
+
         away_team = st.selectbox(
-            "Équipe B",
+            "✈️ Équipe B",
             away_options
         )
 
@@ -375,7 +668,7 @@ elif page == "🎯 Nouvelle prédiction":
     with col1:
 
         form_games = st.selectbox(
-            "Forme récente",
+            "📈 Forme récente",
             [5, 8, 10],
             index=2
         )
@@ -384,21 +677,26 @@ elif page == "🎯 Nouvelle prédiction":
     with col2:
 
         st.selectbox(
-            "Analyse Over/Under",
-            [
-                "Toutes les lignes"
-            ],
+            "📊 Analyse Over/Under",
+            ["Toutes les lignes"],
             index=0
         )
 
 
+    st.caption(
+        "Le moteur analysera automatiquement "
+        "les lignes Over/Under de 3.5 à 9.5."
+    )
+
+
     # ========================================================
-    # ANALYSE
+    # BOUTON
     # ========================================================
 
     if st.button(
-        "🔎 Analyser le match",
-        type="primary"
+        "🔎 ANALYSER LE MATCH",
+        type="primary",
+        use_container_width=True
     ):
 
         predictor = Predictor(
@@ -434,9 +732,116 @@ elif page == "🎯 Nouvelle prédiction":
             st.divider()
 
 
-            st.subheader(
-                f"{home_team} vs {away_team}"
+            # =================================================
+            # MATCH HEADER
+            # =================================================
+
+            st.markdown(
+                f"""
+                <div class="match-card">
+                    <div class="team-name">
+                        {home_team}
+                    </div>
+                    <div class="vs-text">
+                        VS
+                    </div>
+                    <div class="team-name">
+                        {away_team}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
             )
+
+
+            # =================================================
+            # SYNTHÈSE ORION
+            # =================================================
+
+            probabilities = (
+                result["result_probabilities"]
+            )
+
+
+            expected = result[
+                "expected_goals"
+            ]
+
+
+            btts = result[
+                "btts"
+            ]
+
+
+            confidence = result[
+                "confidence"
+            ]
+
+
+            best_result = max(
+                [
+                    (
+                        probabilities["home_win"],
+                        f"Victoire {home_team}"
+                    ),
+                    (
+                        probabilities["draw"],
+                        "Match nul"
+                    ),
+                    (
+                        probabilities["away_win"],
+                        f"Victoire {away_team}"
+                    )
+                ],
+                key=lambda x: x[0]
+            )
+
+
+            st.markdown(
+                '<div class="section-title">'
+                '🧠 Synthèse Orion'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+
+            col1, col2, col3, col4 = st.columns(4)
+
+
+            with col1:
+
+                st.metric(
+                    "Projection principale",
+                    best_result[1],
+                    f"{best_result[0] * 100:.1f}%"
+                )
+
+
+            with col2:
+
+                st.metric(
+                    "Buts attendus",
+                    expected["total"]
+                )
+
+
+            with col3:
+
+                st.metric(
+                    "BTTS 1+",
+                    f"{btts['1']['yes'] * 100:.1f}%"
+                )
+
+
+            with col4:
+
+                st.metric(
+                    "Confiance",
+                    f"{confidence:.1f}%"
+                )
+
+
+            st.divider()
 
 
             # =================================================
@@ -444,12 +849,10 @@ elif page == "🎯 Nouvelle prédiction":
             # =================================================
 
             st.markdown(
-                "### 🎯 Probabilités 1N2"
-            )
-
-
-            probabilities = (
-                result["result_probabilities"]
+                '<div class="section-title">'
+                '🎯 Probabilités 1N2'
+                '</div>',
+                unsafe_allow_html=True
             )
 
 
@@ -459,7 +862,7 @@ elif page == "🎯 Nouvelle prédiction":
             with col1:
 
                 st.metric(
-                    f"Victoire {home_team}",
+                    f"🏠 {home_team}",
                     f"{probabilities['home_win'] * 100:.1f}%"
                 )
 
@@ -467,7 +870,7 @@ elif page == "🎯 Nouvelle prédiction":
             with col2:
 
                 st.metric(
-                    "Nul",
+                    "⚪ Nul",
                     f"{probabilities['draw'] * 100:.1f}%"
                 )
 
@@ -475,7 +878,7 @@ elif page == "🎯 Nouvelle prédiction":
             with col3:
 
                 st.metric(
-                    f"Victoire {away_team}",
+                    f"✈️ {away_team}",
                     f"{probabilities['away_win'] * 100:.1f}%"
                 )
 
@@ -485,7 +888,10 @@ elif page == "🎯 Nouvelle prédiction":
             # =================================================
 
             st.markdown(
-                "### 📊 Classement Elo"
+                '<div class="section-title">'
+                '📊 Classement Elo'
+                '</div>',
+                unsafe_allow_html=True
             )
 
 
@@ -521,13 +927,11 @@ elif page == "🎯 Nouvelle prédiction":
             # =================================================
 
             st.markdown(
-                "### ⚽ Buts attendus"
+                '<div class="section-title">'
+                '⚽ Buts attendus'
+                '</div>',
+                unsafe_allow_html=True
             )
-
-
-            expected = result[
-                "expected_goals"
-            ]
 
 
             col1, col2, col3 = st.columns(3)
@@ -552,7 +956,7 @@ elif page == "🎯 Nouvelle prédiction":
             with col3:
 
                 st.metric(
-                    "Total attendu",
+                    "Total",
                     expected["total"]
                 )
 
@@ -562,16 +966,45 @@ elif page == "🎯 Nouvelle prédiction":
             # =================================================
 
             st.markdown(
-                "### 🎯 Scores les plus probables"
+                '<div class="section-title">'
+                '🎯 Scores les plus probables'
+                '</div>',
+                unsafe_allow_html=True
             )
 
 
-            for score, probability in result["scores"]:
+            scores = result[
+                "scores"
+            ]
 
-                st.write(
-                    f"**{score[0]} - {score[1]}** "
-                    f"→ {probability * 100:.2f}%"
-                )
+
+            score_columns = st.columns(
+                min(len(scores), 3)
+            )
+
+
+            for index, (
+                score,
+                probability
+            ) in enumerate(scores):
+
+                with score_columns[
+                    index % len(score_columns)
+                ]:
+
+                    st.markdown(
+                        f"""
+                        <div class="score-card">
+                            <div class="score">
+                                {score[0]} - {score[1]}
+                            </div>
+                            <div class="score-prob">
+                                {probability * 100:.2f}%
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
 
             # =================================================
@@ -579,11 +1012,11 @@ elif page == "🎯 Nouvelle prédiction":
             # =================================================
 
             st.markdown(
-                "### ⚽ BTTS"
+                '<div class="section-title">'
+                '⚽ BTTS'
+                '</div>',
+                unsafe_allow_html=True
             )
-
-
-            btts = result["btts"]
 
 
             col1, col2, col3, col4 = st.columns(4)
@@ -626,13 +1059,19 @@ elif page == "🎯 Nouvelle prédiction":
             # =================================================
 
             st.markdown(
-                "### 📊 Over / Under"
+                '<div class="section-title">'
+                '📊 Over / Under'
+                '</div>',
+                unsafe_allow_html=True
             )
 
 
             over_under = result[
                 "over_under"
             ]
+
+
+            over_under_rows = []
 
 
             for current_line in [
@@ -650,30 +1089,24 @@ elif page == "🎯 Nouvelle prédiction":
                 ]
 
 
-                col1, col2, col3 = st.columns(3)
+                over_under_rows.append(
+                    {
+                        "Ligne": current_line,
+                        "Over": (
+                            f"{line_data['over'] * 100:.1f}%"
+                        ),
+                        "Under": (
+                            f"{line_data['under'] * 100:.1f}%"
+                        )
+                    }
+                )
 
 
-                with col1:
-
-                    st.write(
-                        f"**Ligne {current_line}**"
-                    )
-
-
-                with col2:
-
-                    st.metric(
-                        f"Over {current_line}",
-                        f"{line_data['over'] * 100:.1f}%"
-                    )
-
-
-                with col3:
-
-                    st.metric(
-                        f"Under {current_line}",
-                        f"{line_data['under'] * 100:.1f}%"
-                    )
+            st.dataframe(
+                over_under_rows,
+                use_container_width=True,
+                hide_index=True
+            )
 
 
             # =================================================
@@ -681,14 +1114,17 @@ elif page == "🎯 Nouvelle prédiction":
             # =================================================
 
             st.markdown(
-                f"### 📈 Forme — "
-                f"{form_games} derniers matchs"
+                f'<div class="section-title">'
+                f'📈 Forme — {form_games} derniers matchs'
+                f'</div>',
+                unsafe_allow_html=True
             )
 
 
             home_form = result[
                 "home_form"
             ]
+
 
             away_form = result[
                 "away_form"
@@ -700,45 +1136,45 @@ elif page == "🎯 Nouvelle prédiction":
 
             with col1:
 
-                st.write(
-                    f"**{home_team}**"
+                st.markdown(
+                    f"### 🏠 {home_team}"
                 )
 
-                st.write(
-                    f"Forme : "
+                st.metric(
+                    "Forme",
                     f"{home_form['form_score']:.1f}%"
                 )
 
                 st.write(
-                    f"Buts marqués/match : "
-                    f"{home_form['average_goals_for']:.2f}"
+                    f"⚽ Buts marqués/match : "
+                    f"**{home_form['average_goals_for']:.2f}**"
                 )
 
                 st.write(
-                    f"Buts encaissés/match : "
-                    f"{home_form['average_goals_against']:.2f}"
+                    f"🛡️ Buts encaissés/match : "
+                    f"**{home_form['average_goals_against']:.2f}**"
                 )
 
 
             with col2:
 
-                st.write(
-                    f"**{away_team}**"
+                st.markdown(
+                    f"### ✈️ {away_team}"
                 )
 
-                st.write(
-                    f"Forme : "
+                st.metric(
+                    "Forme",
                     f"{away_form['form_score']:.1f}%"
                 )
 
                 st.write(
-                    f"Buts marqués/match : "
-                    f"{away_form['average_goals_for']:.2f}"
+                    f"⚽ Buts marqués/match : "
+                    f"**{away_form['average_goals_for']:.2f}**"
                 )
 
                 st.write(
-                    f"Buts encaissés/match : "
-                    f"{away_form['average_goals_against']:.2f}"
+                    f"🛡️ Buts encaissés/match : "
+                    f"**{away_form['average_goals_against']:.2f}**"
                 )
 
 
@@ -747,35 +1183,52 @@ elif page == "🎯 Nouvelle prédiction":
             # =================================================
 
             st.markdown(
-                "### 🤝 H2H"
+                '<div class="section-title">'
+                '🤝 Face-à-face (H2H)'
+                '</div>',
+                unsafe_allow_html=True
             )
 
 
-            h2h = result["h2h"]
+            h2h = result[
+                "h2h"
+            ]
 
 
             if h2h["matches"] == 0:
 
                 st.info(
-                    "Aucun H2H disponible."
+                    "Aucun historique H2H disponible "
+                    "pour ces deux équipes."
                 )
 
             else:
 
-                st.write(
-                    f"Matchs H2H analysés : "
-                    f"**{h2h['matches']}**"
-                )
+                col1, col2, col3 = st.columns(3)
 
-                st.write(
-                    f"Buts pondérés {home_team} : "
-                    f"**{h2h['weighted_team_a_goals']:.2f}**"
-                )
 
-                st.write(
-                    f"Buts pondérés {away_team} : "
-                    f"**{h2h['weighted_team_b_goals']:.2f}**"
-                )
+                with col1:
+
+                    st.metric(
+                        "Matchs H2H",
+                        h2h["matches"]
+                    )
+
+
+                with col2:
+
+                    st.metric(
+                        f"Buts {home_team}",
+                        f"{h2h['weighted_team_a_goals']:.2f}"
+                    )
+
+
+                with col3:
+
+                    st.metric(
+                        f"Buts {away_team}",
+                        f"{h2h['weighted_team_b_goals']:.2f}"
+                    )
 
 
             # =================================================
@@ -783,13 +1236,27 @@ elif page == "🎯 Nouvelle prédiction":
             # =================================================
 
             st.markdown(
-                "### 🧠 Indice de confiance"
+                '<div class="section-title">'
+                '🧠 Fiabilité du modèle'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+
+            st.progress(
+                max(
+                    0.0,
+                    min(
+                        1.0,
+                        confidence / 100
+                    )
+                )
             )
 
 
             st.metric(
-                "Confiance du modèle",
-                f"{result['confidence']:.1f}%"
+                "Indice de confiance",
+                f"{confidence:.1f}%"
             )
 
 
@@ -799,8 +1266,18 @@ elif page == "🎯 Nouvelle prédiction":
 
 elif page == "📊 Statistiques":
 
-    st.title(
-        "📊 Statistiques des équipes"
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="hero-title">
+                📊 Statistiques
+            </div>
+            <div class="hero-subtitle">
+                Analyse détaillée des équipes de la base
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
@@ -823,8 +1300,8 @@ elif page == "📊 Statistiques":
         ]
 
 
-        st.subheader(
-            selected_team
+        st.markdown(
+            f"### ⚽ {selected_team}"
         )
 
 
@@ -869,7 +1346,7 @@ elif page == "📊 Statistiques":
         with col1:
 
             st.metric(
-                "Buts marqués",
+                "⚽ Buts marqués",
                 team["goals_for"]
             )
 
@@ -877,7 +1354,7 @@ elif page == "📊 Statistiques":
         with col2:
 
             st.metric(
-                "Buts encaissés",
+                "🛡️ Buts encaissés",
                 team["goals_against"]
             )
 
@@ -890,26 +1367,41 @@ elif page == "📊 Statistiques":
             )
 
 
-        st.write(
-            f"Attaque moyenne : "
-            f"**{team['attack_average']:.2f}**"
-        )
+        st.divider()
 
 
-        st.write(
-            f"Défense moyenne : "
-            f"**{team['defense_average']:.2f}**"
-        )
+        col1, col2, col3 = st.columns(3)
 
 
-        st.write(
-            f"Taux de victoire : "
-            f"**{team['win_rate']:.1f}%**"
-        )
+        with col1:
+
+            st.metric(
+                "Attaque moyenne",
+                f"{team['attack_average']:.2f}"
+            )
 
 
-        st.subheader(
-            "Forme récente"
+        with col2:
+
+            st.metric(
+                "Défense moyenne",
+                f"{team['defense_average']:.2f}"
+            )
+
+
+        with col3:
+
+            st.metric(
+                "Taux de victoire",
+                f"{team['win_rate']:.1f}%"
+            )
+
+
+        st.divider()
+
+
+        st.markdown(
+            "### 📈 Forme récente"
         )
 
 
@@ -927,22 +1419,31 @@ elif page == "📊 Statistiques":
         )
 
 
-        st.write(
-            f"Forme : "
-            f"**{form['form_score']:.1f}%**"
-        )
+        col1, col2, col3 = st.columns(3)
 
 
-        st.write(
-            f"Buts marqués/match : "
-            f"**{form['average_goals_for']:.2f}**"
-        )
+        with col1:
+
+            st.metric(
+                "Forme",
+                f"{form['form_score']:.1f}%"
+            )
 
 
-        st.write(
-            f"Buts encaissés/match : "
-            f"**{form['average_goals_against']:.2f}**"
-        )
+        with col2:
+
+            st.metric(
+                "Buts marqués/match",
+                f"{form['average_goals_for']:.2f}"
+            )
+
+
+        with col3:
+
+            st.metric(
+                "Buts encaissés/match",
+                f"{form['average_goals_against']:.2f}"
+            )
 
 
 # ============================================================
@@ -951,21 +1452,38 @@ elif page == "📊 Statistiques":
 
 elif page == "📚 Base de données":
 
-    st.title(
-        "📚 Base de données"
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="hero-title">
+                📚 Base de données
+            </div>
+            <div class="hero-subtitle">
+                Gestion des matchs et historique des imports
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
-    st.metric(
-        "Nombre de matchs",
-        len(matches)
-    )
+    col1, col2 = st.columns(2)
 
 
-    st.metric(
-        "Nombre d'équipes",
-        len(teams)
-    )
+    with col1:
+
+        st.metric(
+            "⚽ Matchs",
+            len(matches)
+        )
+
+
+    with col2:
+
+        st.metric(
+            "👥 Équipes",
+            len(teams)
+        )
 
 
     st.divider()
@@ -977,8 +1495,8 @@ elif page == "📚 Base de données":
 
     if matches:
 
-        st.subheader(
-            "Matchs enregistrés"
+        st.markdown(
+            "### 📋 Matchs enregistrés"
         )
 
 
@@ -1027,8 +1545,8 @@ elif page == "📚 Base de données":
     # SUPPRESSION
     # ========================================================
 
-    st.subheader(
-        "🗑️ Gestion des données"
+    st.markdown(
+        "### 🗑️ Gestion des données"
     )
 
 
@@ -1036,17 +1554,24 @@ elif page == "📚 Base de données":
         "Nombre de matchs à supprimer "
         "depuis le début de la liste",
         min_value=1,
-        max_value=max(len(matches), 1),
+        max_value=max(
+            len(matches),
+            1
+        ),
         value=min(
             10,
-            max(len(matches), 1)
+            max(
+                len(matches),
+                1
+            )
         ),
         step=1
     )
 
 
     if st.button(
-        "🗑️ Supprimer les matchs sélectionnés"
+        "🗑️ Supprimer les matchs sélectionnés",
+        use_container_width=True
     ):
 
         if not matches:
@@ -1075,8 +1600,8 @@ elif page == "📚 Base de données":
     # SUPPRESSION TOTALE
     # ========================================================
 
-    st.subheader(
-        "⚠️ Zone dangereuse"
+    st.markdown(
+        "### ⚠️ Zone dangereuse"
     )
 
 
@@ -1087,7 +1612,8 @@ elif page == "📚 Base de données":
 
 
     if st.button(
-        "🗑️ Réinitialiser toute la base"
+        "🗑️ Réinitialiser toute la base",
+        use_container_width=True
     ):
 
         if not confirm:
@@ -1107,15 +1633,15 @@ elif page == "📚 Base de données":
             st.rerun()
 
 
+    st.divider()
+
+
     # ========================================================
     # HISTORIQUE
     # ========================================================
 
-    st.divider()
-
-
-    st.subheader(
-        "📜 Historique des imports"
+    st.markdown(
+        "### 📜 Historique des imports"
     )
 
 
