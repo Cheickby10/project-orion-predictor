@@ -329,8 +329,8 @@ page = st.sidebar.radio(
         "📥 Importer des matchs",
         "🎯 Nouvelle prédiction",
         "📊 Statistiques",
+        "📈 Backtesting",
         "📚 Base de données"
-        "Backtesting"
     ]
 )
 
