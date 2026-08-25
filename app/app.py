@@ -49,9 +49,9 @@ from analysis.form import (
 )
 
 from models.predictor import (
-    Predictor
-)
+    Predictor )
 
+from analysis.backtesting import ( Backtester )
 
 # ============================================================
 # CONFIGURATION
@@ -330,6 +330,7 @@ page = st.sidebar.radio(
         "🎯 Nouvelle prédiction",
         "📊 Statistiques",
         "📚 Base de données"
+        "Backtesting"
     ]
 )
 
@@ -1443,6 +1444,262 @@ elif page == "📊 Statistiques":
             st.metric(
                 "Buts encaissés/match",
                 f"{form['average_goals_against']:.2f}"
+            )
+            # ============================================================
+# BACKTESTING
+# ============================================================
+
+elif page == "📈 Backtesting":
+
+    st.title("📈 Backtesting")
+
+    st.write(
+        "Évalue les performances de Project Orion "
+        "sur des matchs historiques."
+    )
+
+    st.info(
+        "Le modèle utilise uniquement les matchs disponibles "
+        "avant chaque match testé afin d'éviter la fuite de données."
+    )
+
+    if len(matches) < 25:
+
+        st.warning(
+            f"Il faut idéalement au moins 25 matchs "
+            f"pour lancer un backtest fiable. "
+            f"Base actuelle : {len(matches)} matchs."
+        )
+
+    else:
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            min_history = st.number_input(
+                "Historique minimum",
+                min_value=10,
+                max_value=max(10, len(matches) - 1),
+                value=min(
+                    20,
+                    max(10, len(matches) - 1)
+                ),
+                step=5
+            )
+
+        with col2:
+
+            form_games_bt = st.selectbox(
+                "Matchs utilisés pour la forme",
+                [5, 8, 10],
+                index=2,
+                key="backtest_form_games"
+            )
+
+
+        if st.button(
+            "🚀 Lancer le backtest",
+            type="primary"
+        ):
+
+            with st.spinner(
+                "Analyse des matchs historiques..."
+            ):
+
+                backtester = Backtester(
+                    matches
+                )
+
+                results = backtester.run(
+                    min_history=int(
+                        min_history
+                    ),
+                    form_games=int(
+                        form_games_bt
+                    )
+                )
+
+                summary = (
+                    backtester.summarize(
+                        results
+                    )
+                )
+
+
+            if not results:
+
+                st.error(
+                    "Aucun match n'a pu être testé."
+                )
+
+            else:
+
+                st.success(
+                    f"Backtest terminé : "
+                    f"{len(results)} matchs analysés."
+                )
+
+
+                st.divider()
+
+
+                # =================================================
+                # RÉSUMÉ
+                # =================================================
+
+                st.subheader(
+                    "📊 Résultats globaux"
+                )
+
+
+                col1, col2, col3 = st.columns(3)
+
+
+                with col1:
+
+                    st.metric(
+                        "Matchs testés",
+                        summary[
+                            "matches_tested"
+                        ]
+                    )
+
+
+                with col2:
+
+                    st.metric(
+                        "Précision 1N2",
+                        f"{summary['accuracy_1x2']:.1f}%"
+                    )
+
+
+                with col3:
+
+                    st.metric(
+                        "Score exact",
+                        f"{summary['exact_score_accuracy']:.1f}%"
+                    )
+
+
+                col1, col2, col3, col4 = st.columns(4)
+
+
+                with col1:
+
+                    st.metric(
+                        "Over 3.5",
+                        f"{summary['over_3_5_accuracy']:.1f}%"
+                    )
+
+
+                with col2:
+
+                    st.metric(
+                        "BTTS 1+",
+                        f"{summary['btts_accuracy']:.1f}%"
+                    )
+
+
+                with col3:
+
+                    st.metric(
+                        "Erreur buts",
+                        f"{summary['average_goal_error']:.2f}"
+                    )
+
+
+                with col4:
+
+                    st.metric(
+                        "Confiance moyenne",
+                        f"{summary['average_confidence']:.1f}%"
+                    )
+
+
+                st.divider()
+
+
+                # =================================================
+                # TABLEAU
+                # =================================================
+
+                st.subheader(
+                    "📋 Détail des prédictions"
+                )
+
+
+                display_results = []
+
+
+                for item in results:
+
+                    actual_score = (
+                        f"{item['actual_score'][0]}"
+                        f"-"
+                        f"{item['actual_score'][1]}"
+                    )
+
+
+                    predicted_score = "-"
+
+
+                    if item["top_score"]:
+
+                        predicted_score = (
+                            f"{item['top_score'][0]}"
+                            f"-"
+                            f"{item['top_score'][1]}"
+                        )
+
+
+                    display_results.append(
+                        {
+                            "Match":
+                                f"{item['home_team']} "
+                                f"vs "
+                                f"{item['away_team']}",
+
+                            "Réel":
+                                actual_score,
+
+                            "Score prédit":
+                                predicted_score,
+
+                            "1N2":
+                                "✅"
+                                if item["correct_1x2"]
+                                else "❌",
+
+                            "Score exact":
+                                "✅"
+                                if item["exact_score"]
+                                else "❌",
+
+                            "Over 3.5":
+                                "✅"
+                                if item[
+                                    "over_3_5_correct"
+                                ]
+                                else "❌",
+
+                            "BTTS 1+":
+                                "✅"
+                                if item[
+                                    "btts_1_correct"
+                                ]
+                                else "❌",
+
+                            "Confiance":
+                                f"{item['confidence']:.1f}%"
+                        }
+                    )
+
+
+                st.dataframe(
+                    display_results,
+                    use_container_width=True,
+                    hide_index=True
             )
 
 
