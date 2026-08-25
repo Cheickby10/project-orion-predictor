@@ -25,6 +25,14 @@ class Backtester:
 
         Pour chaque match testé, le modèle utilise uniquement
         les matchs précédents afin d'éviter le data leakage.
+
+        Les matchs sont stockés normalement du plus récent
+        au plus ancien.
+
+        Le backtest les remet temporairement dans l'ordre
+        chronologique, puis fournit au Predictor les données
+        historiques dans le format attendu :
+        plus récent -> plus ancien.
         """
 
         results = []
@@ -36,35 +44,73 @@ class Backtester:
             return results
 
 
-        # Les matchs sont normalement stockés
-        # du plus récent au plus ancien.
+        # ====================================================
+        # ORDRE CHRONOLOGIQUE
+        # ====================================================
+
+        # Base :
         #
-        # On travaille donc depuis l'ancien vers
-        # le récent pour reproduire le déroulement
-        # historique.
+        # Match récent
+        # Match précédent
+        # ...
+        # Match ancien
+        #
+        # On inverse pour obtenir :
+        #
+        # Match ancien
+        # Match précédent
+        # ...
+        # Match récent
 
         chronological_matches = list(
             reversed(self.matches)
         )
 
 
+        # ====================================================
+        # TEST DES MATCHS
+        # ====================================================
+
         for index in range(
             min_history,
             total_matches
         ):
 
-            historical_matches = (
+            # ------------------------------------------------
+            # HISTORIQUE DISPONIBLE AVANT LE MATCH TESTÉ
+            # ------------------------------------------------
+
+            historical_chronological = (
                 chronological_matches[:index]
             )
+
+
+            # ------------------------------------------------
+            # MATCH À PRÉDIRE
+            # ------------------------------------------------
 
             target_match = (
                 chronological_matches[index]
             )
 
 
-            # ---------------------------------------------
-            # Vérification du match
-            # ---------------------------------------------
+            # ------------------------------------------------
+            # REMISE DANS LE FORMAT DU MOTEUR
+            # ------------------------------------------------
+
+            # Predictor attend les matchs du plus récent
+            # au plus ancien.
+
+            historical_matches = list(
+                reversed(
+                    historical_chronological
+                )
+            )
+
+
+            # =================================================
+            # VÉRIFICATION DU MATCH
+            # =================================================
 
             try:
 
@@ -93,9 +139,9 @@ class Backtester:
                 continue
 
 
-            # ---------------------------------------------
-            # Statistiques historiques
-            # ---------------------------------------------
+            # =================================================
+            # STATISTIQUES HISTORIQUES
+            # =================================================
 
             stats = calculate_team_stats(
                 historical_matches
@@ -103,15 +149,18 @@ class Backtester:
 
 
             if home_team not in stats:
+
                 continue
+
 
             if away_team not in stats:
+
                 continue
 
 
-            # ---------------------------------------------
-            # Création du modèle
-            # ---------------------------------------------
+            # =================================================
+            # CRÉATION DU MODÈLE
+            # =================================================
 
             predictor = Predictor(
                 historical_matches,
@@ -119,9 +168,9 @@ class Backtester:
             )
 
 
-            # ---------------------------------------------
-            # Prédiction
-            # ---------------------------------------------
+            # =================================================
+            # PRÉDICTION
+            # =================================================
 
             prediction = predictor.predict(
                 home_team,
@@ -131,6 +180,7 @@ class Backtester:
 
 
             if prediction is None:
+
                 continue
 
 
@@ -139,9 +189,9 @@ class Backtester:
             ]
 
 
-            # ---------------------------------------------
-            # Résultat réel
-            # ---------------------------------------------
+            # =================================================
+            # RÉSULTAT RÉEL
+            # =================================================
 
             if home_goals > away_goals:
 
@@ -156,9 +206,9 @@ class Backtester:
                 actual_result = "draw"
 
 
-            # ---------------------------------------------
-            # Résultat prédit
-            # ---------------------------------------------
+            # =================================================
+            # RÉSULTAT PRÉDIT
+            # =================================================
 
             predicted_result = max(
                 probabilities,
@@ -167,8 +217,11 @@ class Backtester:
 
 
             result_mapping = {
+
                 "home_win": "home",
+
                 "draw": "draw",
+
                 "away_win": "away"
             }
 
@@ -180,9 +233,9 @@ class Backtester:
             )
 
 
-            # ---------------------------------------------
-            # Précision 1N2
-            # ---------------------------------------------
+            # =================================================
+            # PRÉCISION 1N2
+            # =================================================
 
             correct_1x2 = (
                 predicted_result
@@ -191,9 +244,9 @@ class Backtester:
             )
 
 
-            # ---------------------------------------------
-            # Score prédit
-            # ---------------------------------------------
+            # =================================================
+            # SCORE PRÉDIT
+            # =================================================
 
             scores = prediction.get(
                 "scores",
@@ -203,6 +256,7 @@ class Backtester:
 
             top_score = None
 
+
             if scores:
 
                 top_score = scores[0][0]
@@ -210,18 +264,23 @@ class Backtester:
 
             exact_score = False
 
+
             if top_score is not None:
 
                 exact_score = (
-                    top_score[0] == home_goals
+                    top_score[0]
+                    ==
+                    home_goals
                     and
-                    top_score[1] == away_goals
+                    top_score[1]
+                    ==
+                    away_goals
                 )
 
 
-            # ---------------------------------------------
-            # Over / Under 3.5
-            # ---------------------------------------------
+            # =================================================
+            # OVER / UNDER 3.5
+            # =================================================
 
             total_goals = (
                 home_goals
@@ -249,33 +308,42 @@ class Backtester:
             if line_35:
 
                 over_35_prediction = (
+
                     "over"
+
                     if line_35["over"]
                     >=
                     line_35["under"]
+
                     else
+
                     "under"
                 )
 
 
                 actual_over_35 = (
+
                     "over"
+
                     if total_goals > 3.5
+
                     else
+
                     "under"
                 )
 
 
                 correct_over_35 = (
+
                     over_35_prediction
                     ==
                     actual_over_35
                 )
 
 
-            # ---------------------------------------------
+            # =================================================
             # BTTS 1+
-            # ---------------------------------------------
+            # =================================================
 
             btts = prediction.get(
                 "btts",
@@ -290,43 +358,53 @@ class Backtester:
 
 
             btts_prediction = None
+
             correct_btts = False
 
 
             if btts_1:
 
                 btts_prediction = (
+
                     "yes"
+
                     if btts_1["yes"]
                     >=
                     btts_1["no"]
+
                     else
+
                     "no"
                 )
 
 
                 actual_btts = (
+
                     "yes"
+
                     if (
                         home_goals >= 1
                         and
                         away_goals >= 1
                     )
+
                     else
+
                     "no"
                 )
 
 
                 correct_btts = (
+
                     btts_prediction
                     ==
                     actual_btts
                 )
 
 
-            # ---------------------------------------------
-            # Erreur sur les buts attendus
-            # ---------------------------------------------
+            # =================================================
+            # ERREUR SUR LES BUTS ATTENDUS
+            # =================================================
 
             expected_goals = prediction[
                 "expected_goals"
@@ -345,17 +423,20 @@ class Backtester:
             )
 
 
-            # ---------------------------------------------
-            # Enregistrement
-            # ---------------------------------------------
+            # =================================================
+            # ENREGISTREMENT
+            # =================================================
 
             results.append({
 
-                "match_index": index,
+                "match_index":
+                    index,
 
-                "home_team": home_team,
+                "home_team":
+                    home_team,
 
-                "away_team": away_team,
+                "away_team":
+                    away_team,
 
                 "actual_score": (
                     home_goals,
@@ -424,15 +505,33 @@ class Backtester:
         if total == 0:
 
             return {
-                "matches_tested": 0,
-                "accuracy_1x2": 0,
-                "exact_score_accuracy": 0,
-                "over_3_5_accuracy": 0,
-                "btts_accuracy": 0,
-                "average_goal_error": 0,
-                "average_confidence": 0
+
+                "matches_tested":
+                    0,
+
+                "accuracy_1x2":
+                    0,
+
+                "exact_score_accuracy":
+                    0,
+
+                "over_3_5_accuracy":
+                    0,
+
+                "btts_accuracy":
+                    0,
+
+                "average_goal_error":
+                    0,
+
+                "average_confidence":
+                    0
             }
 
+
+        # ====================================================
+        # 1N2
+        # ====================================================
 
         correct_1x2 = sum(
             result["correct_1x2"]
@@ -440,11 +539,19 @@ class Backtester:
         )
 
 
+        # ====================================================
+        # SCORE EXACT
+        # ====================================================
+
         exact_scores = sum(
             result["exact_score"]
             for result in results
         )
 
+
+        # ====================================================
+        # OVER 3.5
+        # ====================================================
 
         over_35 = sum(
             result["over_3_5_correct"]
@@ -452,11 +559,19 @@ class Backtester:
         )
 
 
+        # ====================================================
+        # BTTS
+        # ====================================================
+
         btts = sum(
             result["btts_1_correct"]
             for result in results
         )
 
+
+        # ====================================================
+        # ERREUR BUTS
+        # ====================================================
 
         goal_error = sum(
             result["goal_error"]
@@ -464,11 +579,19 @@ class Backtester:
         )
 
 
+        # ====================================================
+        # CONFIANCE
+        # ====================================================
+
         confidence = sum(
             result["confidence"]
             for result in results
         )
 
+
+        # ====================================================
+        # RAPPORT
+        # ====================================================
 
         return {
 
@@ -530,4 +653,4 @@ class Backtester:
                     total,
                     2
                 )
-      }
+            }
